@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plannerBenchmark xmlns="https://timefold.ai/xsd/benchmark">
+  <benchmarkDirectory>local/benchmarkReport</benchmarkDirectory>
+
+  <inheritedSolverBenchmark>
+    <solver>
+      <solutionClass>org.acme.vehiclerouting.domain.VehicleRoutePlan</solutionClass>
+      <entityClass>org.acme.vehiclerouting.domain.Vehicle</entityClass>
+      <entityClass>org.acme.vehiclerouting.domain.Visit</entityClass>
+      <scoreDirectorFactory>
+        <constraintProviderClass>org.acme.vehiclerouting.solver.VehicleRoutingConstraintProvider</constraintProviderClass>
+      </scoreDirectorFactory>
+      <termination>
+        <secondsSpentLimit>30</secondsSpentLimit>
+      </termination>
+    </solver>
+  </inheritedSolverBenchmark>
+
+  <solverBenchmark>
+    <name>Default Local Search</name>
+    <solver>
+      <localSearch/>
+    </solver>
+  </solverBenchmark>
+
+  <solverBenchmark>
+    <name>Tabu Search</name>
+    <solver>
+      <localSearch>
+        <acceptor>
+          <entityTabuSize>7</entityTabuSize>
+        </acceptor>
+        <forager>
+          <acceptedCountLimit>1000</acceptedCountLimit>
+        </forager>
+      </localSearch>
+    </solver>
+  </solverBenchmark>
+
+</plannerBenchmark>

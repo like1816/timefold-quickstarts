@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.acme.vehiclerouting.domain.geo.DrivingTimeCalculator;
-import org.acme.vehiclerouting.domain.geo.HaversineDrivingTimeCalculator;
 
 /**
  * The plan for routing vehicles to visits, including:
@@ -81,7 +80,7 @@ public class VehicleRoutePlan {
                 vehicles.stream().map(Vehicle::getHomeLocation),
                 visits.stream().map(Visit::getLocation)).toList();
 
-        DrivingTimeCalculator drivingTimeCalculator = HaversineDrivingTimeCalculator.getInstance();
+        DrivingTimeCalculator drivingTimeCalculator = DrivingTimeCalculator.getAppropriateCalculator(locations);
         drivingTimeCalculator.initDrivingTimeMaps(locations);
     }
 
@@ -119,6 +118,34 @@ public class VehicleRoutePlan {
 
     public void setScore(HardMediumSoftScore score) {
         this.score = score;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setSouthWestCorner(Location southWestCorner) {
+        this.southWestCorner = southWestCorner;
+    }
+
+    public void setNorthEastCorner(Location northEastCorner) {
+        this.northEastCorner = northEastCorner;
+    }
+
+    public void setStartDateTime(LocalDateTime startDateTime) {
+        this.startDateTime = startDateTime;
+    }
+
+    public void setEndDateTime(LocalDateTime endDateTime) {
+        this.endDateTime = endDateTime;
+    }
+
+    public void setVehicles(List<Vehicle> vehicles) {
+        this.vehicles = vehicles;
+    }
+
+    public void setVisits(List<Visit> visits) {
+        this.visits = visits;
     }
 
     // ************************************************************************

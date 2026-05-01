@@ -15,6 +15,7 @@ import java.util.Map;
 
 import ai.timefold.solver.core.api.solver.SolverStatus;
 
+import org.acme.vehiclerouting.domain.GeoLocation;
 import org.acme.vehiclerouting.domain.Location;
 import org.acme.vehiclerouting.domain.VehicleRoutePlan;
 import org.acme.vehiclerouting.domain.Visit;
@@ -107,7 +108,7 @@ class VehicleRoutingPlanResourceTest {
 
     private Visit generateNewVisit(VehicleRoutePlan solution) {
         Visit newVisit = new Visit(String.valueOf(solution.getVisits().size() + 1),
-                "visit%d".formatted(solution.getVisits().size() + 1), new Location(43.77800837529796, 11.223969038020176),
+                "visit%d".formatted(solution.getVisits().size() + 1), new GeoLocation(43.77800837529796, 11.223969038020176),
                 2, LocalDateTime.now().plusDays(1).withHour(8).withMinute(0),
                 LocalDateTime.now().plusDays(1).withHour(14).withMinute(0),
                 Duration.ofMinutes(10));

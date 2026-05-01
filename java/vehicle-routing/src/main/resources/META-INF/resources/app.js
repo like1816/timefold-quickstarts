@@ -2,10 +2,12 @@ let autoRefreshIntervalId = null;
 let initialized = false;
 let optimizing = false;
 let demoDataId = null;
+let solomonInstanceId = null;
 let scheduleId = null;
 let loadedRoutePlan = null;
 let newVisit = null;
 let visitMarker = null;
+let solomonInstances = [];
 const solveButton = $('#solveButton');
 const stopSolvingButton = $('#stopSolvingButton');
 const vehiclesTable = $('#vehicles');
@@ -20,6 +22,16 @@ const map = L.map('map', {doubleClickZoom: false}).setView([51.505, -0.09], 13);
 const visitGroup = L.layerGroup().addTo(map);
 const homeLocationGroup = L.layerGroup().addTo(map);
 const routeGroup = L.layerGroup().addTo(map);
+
+function locationToLatLng(location) {
+    if (Array.isArray(location)) {
+        return location;
+    }
+    if (location && location.latitude !== undefined && location.longitude !== undefined) {
+        return [location.latitude, location.longitude];
+    }
+    return location;
+}
 
 /************************************ Time line constants and variable definitions ************************************/
 
@@ -63,8 +75,10 @@ function pickColor(object) {
         return color;
     }
     let index = nextColorIndex++;
-    color = {bg : BG_COLORS[index], fg: FG_COLORS[index]};
-    COLOR_MAP.set(object,color);
+    // 循环使用颜色，避免索引越界
+    let colorIndex = index % BG_COLORS.length;
+    color = {bg : BG_COLORS[colorIndex], fg: FG_COLORS[colorIndex]};
+    COLOR_MAP.set(object, color);
     return color;
 }
 
@@ -145,7 +159,7 @@ function getHomeLocationMarker(vehicle) {
         iconSize: [20, 20],
         iconAnchor: [10, 10]
     });
-    marker = L.marker(vehicle.homeLocation, { icon: homeIcon });
+    marker = L.marker(locationToLatLng(vehicle.homeLocation), { icon: homeIcon });
     marker.addTo(homeLocationGroup).bindPopup();
     homeLocationMarkerByIdMap.set(vehicle.id, marker);
     return marker;
@@ -156,7 +170,7 @@ function getVisitMarker(visit) {
     if (marker) {
         return marker;
     }
-    marker = L.circleMarker(visit.location);
+    marker = L.circleMarker(locationToLatLng(visit.location));
     marker.addTo(visitGroup).bindPopup();
     visitMarkerByIdMap.set(visit.id, marker);
     return marker;
@@ -164,7 +178,7 @@ function getVisitMarker(visit) {
 
 function renderRoutes(solution) {
     if (!initialized) {
-        const bounds = [solution.southWestCorner, solution.northEastCorner];
+        const bounds = [locationToLatLng(solution.southWestCorner), locationToLatLng(solution.northEastCorner)];
         map.fitBounds(bounds);
     }
     // Vehicles
@@ -208,8 +222,8 @@ function renderRoutes(solution) {
     routeGroup.clearLayers();
     const visitByIdMap = new Map(solution.visits.map(visit => [visit.id, visit]));
     for (let vehicle of solution.vehicles) {
-        const homeLocation = vehicle.homeLocation;
-        const locations = vehicle.visits.map(visitId => visitByIdMap.get(visitId).location);
+        const homeLocation = locationToLatLng(vehicle.homeLocation);
+        const locations = vehicle.visits.map(visitId => locationToLatLng(visitByIdMap.get(visitId).location));
         L.polyline([homeLocation, ...locations, homeLocation], {color: colorByVehicle(vehicle).bg}).addTo(routeGroup);
     }
 
@@ -471,14 +485,33 @@ function setupAjax() {
 }
 
 function solve() {
-    $.post("/route-plans", JSON.stringify(loadedRoutePlan), function (data) {
-        scheduleId = data;
-        refreshSolvingButtons(true);
-    }).fail(function (xhr, ajaxOptions, thrownError) {
+    console.log("Solve button clicked!");
+    console.log("loadedRoutePlan:", loadedRoutePlan);
+    console.log("solomonInstanceId:", solomonInstanceId);
+    
+    if (!loadedRoutePlan) {
+        console.error("loadedRoutePlan is null!");
+        alert("No route plan loaded!");
+        return;
+    }
+    
+    try {
+        const jsonData = JSON.stringify(loadedRoutePlan);
+        console.log("JSON data length:", jsonData.length);
+        
+        $.post("/route-plans", jsonData, function (data) {
+            console.log("Solve started, scheduleId:", data);
+            scheduleId = data;
+            refreshSolvingButtons(true);
+        }).fail(function (xhr, ajaxOptions, thrownError) {
+            console.error("Solve failed:", xhr.status, thrownError);
             showError("Start solving failed.", xhr);
             refreshSolvingButtons(false);
-        },
-        "text");
+        }, "text");
+    } catch (e) {
+        console.error("JSON stringify error:", e);
+        alert("Failed to serialize route plan: " + e.message);
+    }
 }
 
 function refreshSolvingButtons(solving) {
@@ -504,12 +537,14 @@ function refreshSolvingButtons(solving) {
 function refreshRoutePlan() {
     let path = "/route-plans/" + scheduleId;
     if (scheduleId === null) {
-        if (demoDataId === null) {
+        if (solomonInstanceId !== null) {
+            path = "/demo-data/solomon/" + solomonInstanceId;
+        } else if (demoDataId === null) {
             alert("Please select a test data set.");
             return;
+        } else {
+            path = "/demo-data/" + demoDataId;
         }
-
-        path = "/demo-data/" + demoDataId;
     }
 
     $.getJSON(path, function (routePlan) {
@@ -540,6 +575,7 @@ function fetchDemoData() {
 
             $("#" + item + "TestData").click(function () {
                 switchDataDropDownItemActive(item);
+                solomonInstanceId = null;
                 scheduleId = null;
                 demoDataId = item;
                 initialized = false;
@@ -554,6 +590,7 @@ function fetchDemoData() {
         demoDataId = data[0];
         switchDataDropDownItemActive(demoDataId);
 
+        fetchSolomonData();
         refreshRoutePlan();
     }).fail(function (xhr, ajaxOptions, thrownError) {
         // disable this page as there is no data
@@ -562,10 +599,62 @@ function fetchDemoData() {
     });
 }
 
+function fetchSolomonData() {
+    $.get("/demo-data/solomon", function (data) {
+        solomonInstances = data;
+
+        $("#testDataButton").append($('<div class="dropdown-divider"></div>'));
+        $("#testDataButton").append($('<div class="dropdown-header text-center fw-bold">Solomon Benchmarks</div>'));
+
+        const solomonContainer = $('<div style="max-height: 300px; overflow-y: auto;"></div>');
+        
+        const grouped = { C: [], R: [], RC: [] };
+        data.forEach(function(instance) {
+            const prefix = instance.id.substring(0, 1).toUpperCase();
+            if (grouped[prefix]) grouped[prefix].push(instance);
+        });
+
+        ["C", "R", "RC"].forEach(function(type) {
+            if (grouped[type].length > 0) {
+                solomonContainer.append($('<div class="dropdown-header text-xs text-muted px-3">' + type + ' Series</div>'));
+                grouped[type].forEach(function(instance) {
+                    const item = $('<a id="' + instance.id + 'Solomon" class="dropdown-item" href="#">' + instance.id + '</a>');
+                    item.click(function() {
+                        $("#testDataButton > a.active").removeClass("active");
+                        item.addClass("active");
+                        demoDataId = null;
+                        solomonInstanceId = instance.id;
+                        scheduleId = null;
+                        initialized = false;
+                        homeLocationGroup.clearLayers();
+                        homeLocationMarkerByIdMap.clear();
+                        visitGroup.clearLayers();
+                        visitMarkerByIdMap.clear();
+                        refreshRoutePlan();
+                    });
+                    solomonContainer.append(item);
+                });
+            }
+        });
+
+        $("#testDataButton").append(solomonContainer);
+    }).fail(function(xhr) {
+        console.error("Solomon API failed:", xhr.status);
+    });
+}
+
 function switchDataDropDownItemActive(newItem) {
     activeCssClass = "active";
     $("#testDataButton > a." + activeCssClass).removeClass(activeCssClass);
-    $("#" + newItem + "TestData").addClass(activeCssClass);
+    // Handle both demo data and Solomon instances
+    const elementId = newItem.endsWith("TestData") ? newItem : newItem + "Solomon";
+    const element = $("#" + elementId);
+    if (element.length > 0) {
+        element.addClass(activeCssClass);
+    } else {
+        // Try without suffix for demo data
+        $("#" + newItem + "TestData").addClass(activeCssClass);
+    }
 }
 
 function copyTextToClipboard(id) {

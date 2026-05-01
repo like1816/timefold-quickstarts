@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 
 import ai.timefold.solver.core.api.score.stream.test.ConstraintVerifier;
 
+import org.acme.vehiclerouting.domain.GeoLocation;
 import org.acme.vehiclerouting.domain.Location;
 import org.acme.vehiclerouting.domain.Vehicle;
 import org.acme.vehiclerouting.domain.VehicleRoutePlan;
@@ -28,9 +29,9 @@ class VehicleRoutingConstraintProviderTest {
      * LOCATION_2 to LOCATION_3 is approx. 8880 m ~639 seconds of driving time
      * LOCATION_1 to LOCATION_3 is approx. 13075 m ~941 seconds of driving time
      */
-    private static final Location LOCATION_1 = new Location(49.288087, 16.562172);
-    private static final Location LOCATION_2 = new Location(49.190922, 16.624466);
-    private static final Location LOCATION_3 = new Location(49.1767533245638, 16.50422914190477);
+    private static final Location LOCATION_1 = new GeoLocation(49.288087, 16.562172);
+    private static final Location LOCATION_2 = new GeoLocation(49.190922, 16.624466);
+    private static final Location LOCATION_3 = new GeoLocation(49.1767533245638, 16.50422914190477);
 
     private static final LocalDate TOMORROW = LocalDate.now().plusDays(1);
     private static final LocalDateTime TOMORROW_07_00 = LocalDateTime.of(TOMORROW, LocalTime.of(7, 0));

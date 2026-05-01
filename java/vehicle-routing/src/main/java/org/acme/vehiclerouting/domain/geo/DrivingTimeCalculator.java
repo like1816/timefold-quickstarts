@@ -1,48 +1,64 @@
 package org.acme.vehiclerouting.domain.geo;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.acme.vehiclerouting.domain.CartesianLocation;
+import org.acme.vehiclerouting.domain.GeoLocation;
 import org.acme.vehiclerouting.domain.Location;
 
 public interface DrivingTimeCalculator {
 
-    /**
-     * Calculate the driving time between {@code from} and {@code to} in seconds.
-     *
-     * @param from starting location
-     * @param to target location
-     * @return driving time in seconds
-     */
     long calculateDrivingTime(Location from, Location to);
 
-    /**
-     * Bulk calculation of driving time.
-     * Typically, much more scalable than {@link #calculateDrivingTime(Location, Location)} iteratively.
-     *
-     * @param fromLocations never null
-     * @param toLocations never null
-     * @return never null
-     */
     default Map<Location, Map<Location, Long>> calculateBulkDrivingTime(
             Collection<Location> fromLocations,
             Collection<Location> toLocations) {
-        return fromLocations.stream().collect(Collectors.toMap(
-                Function.identity(),
-                from -> toLocations.stream().collect(Collectors.toMap(
-                        Function.identity(),
-                        to -> calculateDrivingTime(from, to)))));
+        List<Location> fromList = new ArrayList<>(fromLocations);
+        List<Location> toList = new ArrayList<>(toLocations);
+
+        Map<Location, Map<Location, Long>> result = new LinkedHashMap<>();
+        for (Location from : fromList) {
+            Map<Location, Long> innerMap = new LinkedHashMap<>();
+            for (Location to : toList) {
+                innerMap.put(to, calculateDrivingTime(from, to));
+            }
+            result.put(from, innerMap);
+        }
+
+        return result;
     }
 
-    /**
-     * Calculate driving time matrix for the given list of locations and assign driving time maps accordingly.
-     *
-     * @param locations locations list
-     */
     default void initDrivingTimeMaps(Collection<Location> locations) {
         Map<Location, Map<Location, Long>> drivingTimeMatrix = calculateBulkDrivingTime(locations, locations);
         locations.forEach(location -> location.setDrivingTimeSeconds(drivingTimeMatrix.get(location)));
+    }
+
+    static DrivingTimeCalculator getAppropriateCalculator(Collection<Location> locations) {
+        if (locations.isEmpty()) {
+            return HaversineDrivingTimeCalculator.getInstance();
+        }
+
+        Location firstLocation = locations.iterator().next();
+        if (firstLocation instanceof CartesianLocation) {
+            return EuclideanDrivingTimeCalculator.getInstance();
+        } else if (firstLocation instanceof GeoLocation) {
+            return HaversineDrivingTimeCalculator.getInstance();
+        }
+
+        boolean hasGeoLocation = locations.stream().anyMatch(l -> l instanceof GeoLocation);
+        boolean hasCartesianLocation = locations.stream().anyMatch(l -> l instanceof CartesianLocation);
+
+        if (hasGeoLocation && hasCartesianLocation) {
+            throw new IllegalStateException("Mixed location types (GeoLocation and CartesianLocation) are not supported.");
+        } else if (hasCartesianLocation) {
+            return EuclideanDrivingTimeCalculator.getInstance();
+        } else {
+            return HaversineDrivingTimeCalculator.getInstance();
+        }
     }
 }

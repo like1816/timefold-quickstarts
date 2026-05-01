@@ -150,8 +150,11 @@ public class Visit implements LocationAware {
 
     @JsonIgnore
     public boolean isServiceFinishedAfterMaxEndTime() {
-        return arrivalTime != null
-                && arrivalTime.plus(serviceDuration).isAfter(maxEndTime);
+        if (arrivalTime == null) {
+            return false;
+        }
+        LocalDateTime departureTime = getDepartureTime();
+        return departureTime.isAfter(maxEndTime);
     }
 
     @JsonIgnore
@@ -159,7 +162,11 @@ public class Visit implements LocationAware {
         if (arrivalTime == null) {
             return 0;
         }
-        return roundDurationToNextOrEqualMinutes(Duration.between(maxEndTime, arrivalTime.plus(serviceDuration)));
+        LocalDateTime departureTime = getDepartureTime();
+        if (!departureTime.isAfter(maxEndTime)) {
+            return 0;
+        }
+        return roundDurationToNextOrEqualMinutes(Duration.between(maxEndTime, departureTime));
     }
 
     private static long roundDurationToNextOrEqualMinutes(Duration duration) {
@@ -196,5 +203,4 @@ public class Visit implements LocationAware {
     public String toString() {
         return id;
     }
-
 }
