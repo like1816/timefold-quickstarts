@@ -23,16 +23,18 @@
       <constructionHeuristic/>
       <localSearch>
         <localSearchType>LATE_ACCEPTANCE</localSearchType>
-        <moveSelector>
-          <nearbySelection>
-            <entitySelector>
-              <entityClass>org.acme.vehiclerouting.domain.Visit</entityClass>
-            </entitySelector>
-            <valueSelector>
-              <NearbyDistanceMeterClass>org.acme.vehiclerouting.domain.LocationDistanceMeter</NearbyDistanceMeterClass>
-            </valueSelector>
-          </nearbySelection>
-        </moveSelector>
+        <acceptor>
+          <entityUndoMoveSelector>
+            <nearbySelection>
+              <entitySelector>
+                <entityClass>org.acme.vehiclerouting.domain.Visit</entityClass>
+              </entitySelector>
+              <valueSelector>
+                <NearbyDistanceMeterClass>org.acme.vehiclerouting.domain.LocationDistanceMeter</NearbyDistanceMeterClass>
+              </valueSelector>
+            </nearbySelection>
+          </entityUndoMoveSelector>
+        </acceptor>
       </localSearch>
     </solver>
   </solverBenchmark>
