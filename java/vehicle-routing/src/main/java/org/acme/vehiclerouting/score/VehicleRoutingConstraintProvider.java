@@ -1,4 +1,4 @@
-package org.acme.vehiclerouting.solver;
+package org.acme.vehiclerouting.score;
 
 import ai.timefold.solver.core.api.score.HardMediumSoftScore;
 import ai.timefold.solver.core.api.score.stream.Constraint;

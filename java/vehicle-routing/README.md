@@ -1,6 +1,6 @@
-# Vehicle Routing with time windows and capacity planning (Java, Quarkus, Maven)
+# Vehicle Routing Auto Research
 
-Find the most efficient routes for a fleet of vehicles.
+This project implements a Vehicle Routing Problem with Time Windows (VRPTW) solver using Timefold AI, with integrated Auto Research capabilities for automated solver optimization.
 
 ![Vehicle Routing Screenshot](./vehicle-routing-screenshot.png)
 
@@ -13,15 +13,17 @@ Find the most efficient routes for a fleet of vehicles.
 | Maximize visits assigned            | Medium | As many visits as possible should be assigned to a vehicle.                        |
 | Minimize travel time                | Soft   | Minimize the total travel time of all vehicles.                                    |
 
-- [Run the application](#run-the-application)
-- [Run the packaged application](#run-the-packaged-application)
-- [Run the application in a container](#run-the-application-in-a-container)
-- [Run it native](#run-it-native)
+## Table of Contents
+
+- [How to Run](#how-to-run)
+- [Auto Research](#auto-research)
 
 > [!TIP]  
-> <img src="https://docs.timefold.ai/_/img/models/field-service-routing.svg" align="right" width="50px" /> [Check out our off-the-shelf model for Field Service Routing](https://app.timefold.ai/models/field-service-routing/v1). This model goes beyond basic Vehicle Routing and supports additional constraints such as priorities, skills, fairness and more.
+> <img src="https://docs.timefold.ai/_/img/models/field-service-routing.svg" align="right" width="50px" /> [Check out our off-the-shelf model for Field Service Routing](https://app.timefold.ai/models/field-service-routing/v1).
 
-## Prerequisites
+## How to Run
+
+### Prerequisites
 
 1. Install Java and Maven, for example with [Sdkman](https://sdkman.io):
    ```sh
@@ -29,95 +31,90 @@ Find the most efficient routes for a fleet of vehicles.
    $ sdk install maven
    ```
 
-## Run the application
+### Run the application (Dev Mode)
 
-1. Git clone the timefold-quickstarts repo and navigate to this directory:
+1. Git clone the repo and navigate to this directory:
    ```sh
-   $ git clone https://github.com/TimefoldAI/timefold-quickstarts.git
+   $ git clone https://github.com/like1816/timefold-quickstarts.git
    ...
    $ cd timefold-quickstarts/java/vehicle-routing
    ```
 
-2. (Optional) If you want to run a licensed edition (Plus / Enterprise), set up your license key first. See the [Timefold license tool](https://licenses.timefold.ai/) for instructions.
+2. (Optional) For Plus/Enterprise Edition, set up your license key first.
 
-3. Start the application with Maven:
-
-   1. Community Edition
-   
-      ```sh
-      $ mvn quarkus:dev
-      ```
-   
-   2. Plus / Enterprise Edition: The profile sets up the correct Maven artifacts to run the licensed version. See the `pom.xml` for the implementation details.
-
-      ```sh
-      $ mvn quarkus:dev -Denterprise
-      ```
-
-4. Visit [http://localhost:8080](http://localhost:8080) in your browser.
-
-5. Click on the **Solve** button.
-
-Then try _live coding_:
-
-- Make some changes in the source code.
-- Refresh your browser (F5).
-- Notice that those changes are immediately visible.
-
-## Run the packaged application
-
-When you're done iterating in `quarkus:dev` mode, package the application to run as a conventional jar file.
-
-1. Compile it with Maven:
+3. Start the application:
    ```sh
-   $ mvn package
+   $ mvn quarkus:dev
    ```
 
-2. Run it:
-   ```sh
-   $ java -jar ./target/quarkus-app/quarkus-run.jar
-   ```
+4. Visit [http://localhost:8080](http://localhost:8080) and click **Solve**.
 
-   > **Note**  
-   > To run it on port 8081 instead, add `-Dquarkus.http.port=8081`.
+### Run the packaged application
 
-3. Visit [http://localhost:8080](http://localhost:8080) in your browser.
+```sh
+$ mvn package
+$ java -jar ./target/quarkus-app/quarkus-run.jar
+```
 
-4. Click on the **Solve** button.
+### Run in a container
 
-## Run the application in a container
+```sh
+$ mvn package -Dcontainer
+$ docker run -p 8080:8080 --rm $USER/vehicle-routing:1.0-SNAPSHOT
+```
 
-1. Build a container image:
-   ```sh
-   $ mvn package -Dcontainer
-   ```
-   The container image name
+### Run natively
 
-2. Run a container:
-   ```sh
-   $ docker run -p 8080:8080 --rm $USER/vehicle-routing:1.0-SNAPSHOT
-   ```
+```sh
+$ mvn package -Dnative
+$ ./target/*-runner
+```
 
-## Run it native
+## Auto Research
 
-To increase startup performance for serverless deployments, build the application as a native executable:
+Auto Research enables automated optimization of solver configurations. It iteratively tests different heuristic strategies, parameters, and filters, automatically recording and comparing results.
 
-1. [Install GraalVM and gu install the native-image tool](https://quarkus.io/guides/building-native-image#configuring-graalvm).
+### Key Files
 
-2. Compile it natively.  
-   This takes a few minutes:
-   ```sh
-   $ mvn package -Dnative
-   ```
+- `src/main/resources/vehicleRoutingBenchmarkConfig.xml` - Solver configuration
+- `src/main/java/org/acme/vehiclerouting/solver/` - Custom Move Selectors, Comparators, Filters
+- `results.tsv` - Benchmark results (keep untracked by git)
+- `skill.md` - Auto Research skill documentation
 
-3. Run the native executable:
-   ```sh
-   $ ./target/*-runner
-   ```
+### Run Benchmark
 
-4. Visit [http://localhost:8080](http://localhost:8080) in your browser.
+```sh
+$ cd timefold-quickstarts/java/vehicle-routing
+$ mvn exec:java -Dexec.mainClass="org.acme.vehiclerouting.benchmark.VehicleRoutingBenchmarkRunner"
+```
 
-5. Click on the **Solve** button.
+### Results Format (results.tsv)
+
+| Column | Description |
+|--------|-------------|
+| commit | Git commit ID |
+| problem | Problem instance (e.g., r101) |
+| config_name | Configuration name |
+| final_score | Final soft score (minimizes travel time, closer to 0 = better) |
+| run_time_ms | Run time in milliseconds |
+| score_calc_count | Number of score calculations |
+| convergence_time_ms | Time to last improvement |
+
+### Auto Research Workflow
+
+1. **Check git state**: Note current branch/commit
+2. **Modify configurations**:
+   - Edit `vehicleRoutingBenchmarkConfig.xml` for Local Search strategies
+   - Add custom components in `src/main/java/org/acme/vehiclerouting/solver/`
+   - Apply optimizations: incremental score, multi-threading, nearby selection
+3. **git commit**: Record changes (for recovery)
+4. **Run benchmark**: Execute the solver
+5. **Check results**: Review output and `results.tsv`
+6. **If crashed**: Debug using console output
+7. **Record**: Results appended to `results.tsv` (keep untracked)
+8. **Compare and decide**:
+   - If score improved: Keep the commit, advance the branch
+   - If score equal or worse: `git reset` to revert changes
 
 ## More information
 

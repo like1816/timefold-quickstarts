@@ -52,7 +52,7 @@ public class SolomonSolverTest {
                 .withSolutionClass(VehicleRoutePlan.class)
                 .withEntityClasses(org.acme.vehiclerouting.domain.Vehicle.class,
                         org.acme.vehiclerouting.domain.Visit.class)
-                .withConstraintProviderClass(org.acme.vehiclerouting.solver.VehicleRoutingConstraintProvider.class);
+                .withConstraintProviderClass(org.acme.vehiclerouting.score.VehicleRoutingConstraintProvider.class);
 
         SolverFactory<VehicleRoutePlan> solverFactory = SolverFactory.create(solverConfig);
         Solver<VehicleRoutePlan> solver = solverFactory.buildSolver();

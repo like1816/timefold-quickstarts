@@ -43,7 +43,7 @@ public class App {
         SolverConfig solverConfig = new SolverConfig()
                 .withSolutionClass(VehicleRoutePlan.class)
                 .withEntityClasses(Vehicle.class, Visit.class)
-                .withConstraintProviderClass(org.acme.vehiclerouting.solver.VehicleRoutingConstraintProvider.class);
+                .withConstraintProviderClass(org.acme.vehiclerouting.score.VehicleRoutingConstraintProvider.class);
 
         SolverFactory<VehicleRoutePlan> solverFactory = SolverFactory.create(solverConfig);
         Solver<VehicleRoutePlan> solver = solverFactory.buildSolver();

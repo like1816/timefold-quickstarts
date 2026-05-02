@@ -1,4 +1,4 @@
-package org.acme.vehiclerouting.solver;
+package org.acme.vehiclerouting.score;
 
 import java.time.Duration;
 import java.time.LocalDate;

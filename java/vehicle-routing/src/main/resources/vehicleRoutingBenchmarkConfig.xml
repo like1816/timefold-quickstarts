@@ -8,7 +8,7 @@
       <entityClass>org.acme.vehiclerouting.domain.Vehicle</entityClass>
       <entityClass>org.acme.vehiclerouting.domain.Visit</entityClass>
       <scoreDirectorFactory>
-        <constraintProviderClass>org.acme.vehiclerouting.solver.VehicleRoutingConstraintProvider</constraintProviderClass>
+        <constraintProviderClass>org.acme.vehiclerouting.score.VehicleRoutingConstraintProvider</constraintProviderClass>
       </scoreDirectorFactory>
       <termination>
         <secondsSpentLimit>30</secondsSpentLimit>
@@ -16,23 +16,12 @@
     </solver>
   </inheritedSolverBenchmark>
 
+  <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>Default Local Search</name>
+    <name>Visit Waiting Time Sorter</name>
     <solver>
-      <localSearch/>
-    </solver>
-  </solverBenchmark>
-
-  <solverBenchmark>
-    <name>Tabu Search</name>
-    <solver>
+      <constructionHeuristic/>
       <localSearch>
-        <acceptor>
-          <entityTabuSize>7</entityTabuSize>
-        </acceptor>
-        <forager>
-          <acceptedCountLimit>1000</acceptedCountLimit>
-        </forager>
       </localSearch>
     </solver>
   </solverBenchmark>
