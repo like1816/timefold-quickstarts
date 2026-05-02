@@ -50,14 +50,22 @@ public class VehicleRoutingBenchmarkRunner {
     public static void main(String[] args) {
         // 1. 获取问题实例名称（默认 r101）
         String problem = args.length > 0 ? args[0] : "r101";
+        
+        // 1.5. 获取配置文件路径（默认使用资源文件）
+        String configPath = args.length > 1 ? args[1] : "vehicleRoutingBenchmarkConfig.xml";
 
         // 2. 生成唯一的报告目录名（基于当前时间戳）
         String timestamp = LocalDateTime.now().format(DIR_FORMATTER);
         String reportDir = "local/benchmarkReport/" + timestamp;
 
         // 3. 从 XML 配置文件加载配置，并修改报告目录
-        PlannerBenchmarkConfig benchmarkConfig = PlannerBenchmarkConfig.createFromXmlResource(
-                "vehicleRoutingBenchmarkConfig.xml");
+        PlannerBenchmarkConfig benchmarkConfig;
+        File configFile = new File(configPath);
+        if (configFile.exists()) {
+            benchmarkConfig = PlannerBenchmarkConfig.createFromXmlFile(configFile);
+        } else {
+            benchmarkConfig = PlannerBenchmarkConfig.createFromXmlResource(configPath);
+        }
         benchmarkConfig.setBenchmarkDirectory(new File(reportDir));
 
         // 4. 创建 BenchmarkFactory 并构建 Benchmark
