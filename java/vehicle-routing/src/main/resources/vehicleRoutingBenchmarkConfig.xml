@@ -18,11 +18,12 @@
 
   <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>LAHC</name>
+    <name>SimulatedAnnealing</name>
     <solver>
       <constructionHeuristic/>
       <localSearch>
-        <localSearchType>LATE_ACCEPTANCE</localSearchType>
+        <localSearchType>SIMULATED_ANNEALING</localSearchType>
+        <simulatedAnnealingStartingTemperature>1000</simulatedAnnealingStartingTemperature>
       </localSearch>
     </solver>
   </solverBenchmark>
