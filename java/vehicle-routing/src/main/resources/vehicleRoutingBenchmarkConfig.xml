@@ -22,7 +22,7 @@
     <solver>
       <constructionHeuristic/>
       <localSearch>
-        <localSearchType>LateAcceptanceHillClimbing</localSearchType>
+        <localSearchType>LATE_ACCEPTANCE</localSearchType>
       </localSearch>
     </solver>
   </solverBenchmark>
