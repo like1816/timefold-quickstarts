@@ -18,23 +18,12 @@
 
   <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>LAHC + NearbySelection</name>
+    <name>LAHC (size=600)</name>
     <solver>
       <constructionHeuristic/>
       <localSearch>
         <localSearchType>LATE_ACCEPTANCE</localSearchType>
-        <acceptor>
-          <entityUndoMoveSelector>
-            <nearbySelection>
-              <entitySelector>
-                <entityClass>org.acme.vehiclerouting.domain.Visit</entityClass>
-              </entitySelector>
-              <valueSelector>
-                <NearbyDistanceMeterClass>org.acme.vehiclerouting.domain.LocationDistanceMeter</NearbyDistanceMeterClass>
-              </valueSelector>
-            </nearbySelection>
-          </entityUndoMoveSelector>
-        </acceptor>
+        <lateAcceptanceSize>600</lateAcceptanceSize>
       </localSearch>
     </solver>
   </solverBenchmark>
