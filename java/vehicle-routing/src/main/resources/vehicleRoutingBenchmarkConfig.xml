@@ -11,18 +11,18 @@
         <constraintProviderClass>org.acme.vehiclerouting.score.VehicleRoutingConstraintProvider</constraintProviderClass>
       </scoreDirectorFactory>
       <termination>
-        <secondsSpentLimit>60</secondsSpentLimit>
+        <secondsSpentLimit>120</secondsSpentLimit>
       </termination>
     </solver>
   </inheritedSolverBenchmark>
 
   <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>VARIABLE_NEIGHBORHOOD_DESCENT</name>
+    <name>LAHC</name>
     <solver>
       <constructionHeuristic/>
       <localSearch>
-        <localSearchType>VARIABLE_NEIGHBORHOOD_DESCENT</localSearchType>
+        <localSearchType>LATE_ACCEPTANCE</localSearchType>
       </localSearch>
     </solver>
   </solverBenchmark>
