@@ -18,12 +18,11 @@
 
   <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>LAHC (size=600)</name>
+    <name>LAHC</name>
     <solver>
       <constructionHeuristic/>
       <localSearch>
         <localSearchType>LATE_ACCEPTANCE</localSearchType>
-        <lateAcceptanceSize>600</lateAcceptanceSize>
       </localSearch>
     </solver>
   </solverBenchmark>
