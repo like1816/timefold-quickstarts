@@ -18,11 +18,21 @@
 
   <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>LAHC</name>
+    <name>LAHC + NearbySelection</name>
     <solver>
       <constructionHeuristic/>
       <localSearch>
         <localSearchType>LATE_ACCEPTANCE</localSearchType>
+        <moveSelector>
+          <nearbySelection>
+            <entitySelector>
+              <entityClass>org.acme.vehiclerouting.domain.Visit</entityClass>
+            </entitySelector>
+            <valueSelector>
+              <NearbyDistanceMeterClass>org.acme.vehiclerouting.domain.LocationDistanceMeter</NearbyDistanceMeterClass>
+            </valueSelector>
+          </nearbySelection>
+        </moveSelector>
       </localSearch>
     </solver>
   </solverBenchmark>
