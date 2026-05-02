@@ -11,14 +11,14 @@
         <constraintProviderClass>org.acme.vehiclerouting.score.VehicleRoutingConstraintProvider</constraintProviderClass>
       </scoreDirectorFactory>
       <termination>
-        <secondsSpentLimit>300</secondsSpentLimit>
+        <secondsSpentLimit>60</secondsSpentLimit>
       </termination>
     </solver>
   </inheritedSolverBenchmark>
 
   <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>Visit Waiting Time Sorter</name>
+    <name>Baseline Default</name>
     <solver>
       <constructionHeuristic/>
       <localSearch>

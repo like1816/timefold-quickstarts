@@ -120,7 +120,12 @@ LOOP (up to 50 iterations):
    - Edit `vehicleRoutingBenchmarkConfig.xml` for Local Search strategies
    - Or add custom components in `src/main/java/org/acme/vehiclerouting/solver/` (create subfolders if needed)
 3. **`git commit`**: Record changes (for recovery)
-4. **Run benchmark**: `mvn exec:java -Dexec.mainClass="org.acme.vehiclerouting.benchmark.VehicleRoutingBenchmarkRunner"`
+4. **Compile + Run benchmark**:
+   ```bash
+   mvn compile -q
+   mvn exec:java -Dexec.mainClass="org.acme.vehiclerouting.benchmark.VehicleRoutingBenchmarkRunner"
+   ```
+   > Note: The benchmark runner reads from `target/classes/`, not `src/main/resources/`. Always run `mvn compile` before benchmark, or it silently uses the cached config.
 5. **Check results**: Review console output and `results.tsv`
 6. **If crashed**: Debug using console output, try to fix; if idea is fundamentally broken, record "crash" and continue
 7. **Record**: Results automatically appended to `results.tsv` (keep untracked by git)
@@ -132,4 +137,4 @@ LOOP (up to 50 iterations):
 
 **Crash**: If run crashes (OOM, bug, etc.), use your judgment: if it's something silly and easily fixable (e.g., typo, missing import), fix it and re-run. If the idea is fundamentally broken, skip it, record status as "crash", and continue.
 
-**Iteration limit**: The experiment loop should run for a maximum of **50 iterations**. Each iteration takes ~6 minutes (5 min solver + 1 min compile, stats, commit). So ~300 minutes total (~5 hours). If you reach 50 iterations without finding improvements, stop and report to the user.
+**Iteration limit**: The experiment loop should run for a maximum of **50 iterations**. Each iteration takes ~2 minutes (1 min solver + 1 min compile, stats, commit). So ~100 minutes total. If you reach 50 iterations without finding improvements, stop and report to the user.

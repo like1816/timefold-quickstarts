@@ -121,7 +121,12 @@ commit	problem	benchmark_time	config_name	final_score	run_time_ms	score_calc_cou
    - 编辑 `vehicleRoutingBenchmarkConfig.xml` 调整 Local Search 策略
    - 或在 `src/main/java/org/acme/vehiclerouting/solver/` 下添加自定义组件（如需要可创建子文件夹）
 3. **`git commit`**：记录更改（用于恢复）
-4. **运行 benchmark**：`mvn exec:java -Dexec.mainClass="org.acme.vehiclerouting.benchmark.VehicleRoutingBenchmarkRunner"`
+4. **编译 + 运行 benchmark**：
+   ```bash
+   mvn compile -q
+   mvn exec:java -Dexec.mainClass="org.acme.vehiclerouting.benchmark.VehicleRoutingBenchmarkRunner"
+   ```
+   > 注意：benchmark runner 读取的是 `target/classes/`，不是 `src/main/resources/`。每次改配置后必须先 `mvn compile`，否则静默使用旧配置。
 5. **检查结果**：查看控制台输出和 `results.tsv`
 6. **如果崩溃**：调试控制台错误，尝试修复；如果想法从根本上被打破，记录 "crash" 并继续
 7. **记录**：结果自动追加到 `results.tsv`（保持不被 git 跟踪）
