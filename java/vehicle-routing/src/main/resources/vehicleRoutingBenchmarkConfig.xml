@@ -18,11 +18,11 @@
 
   <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>TABU_SEARCH</name>
+    <name>VARIABLE_NEIGHBORHOOD_DESCENT</name>
     <solver>
       <constructionHeuristic/>
       <localSearch>
-        <localSearchType>TABU_SEARCH</localSearchType>
+        <localSearchType>VARIABLE_NEIGHBORHOOD_DESCENT</localSearchType>
       </localSearch>
     </solver>
   </solverBenchmark>
