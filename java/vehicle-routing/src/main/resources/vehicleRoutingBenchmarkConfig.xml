@@ -11,7 +11,7 @@
         <constraintProviderClass>org.acme.vehiclerouting.score.VehicleRoutingConstraintProvider</constraintProviderClass>
       </scoreDirectorFactory>
       <termination>
-        <secondsSpentLimit>30</secondsSpentLimit>
+        <secondsSpentLimit>60</secondsSpentLimit>
       </termination>
     </solver>
   </inheritedSolverBenchmark>
