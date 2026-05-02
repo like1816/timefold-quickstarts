@@ -23,7 +23,6 @@
       <constructionHeuristic/>
       <localSearch>
         <localSearchType>SIMULATED_ANNEALING</localSearchType>
-        <simulatedAnnealingStartingTemperature>1000</simulatedAnnealingStartingTemperature>
       </localSearch>
     </solver>
   </solverBenchmark>
