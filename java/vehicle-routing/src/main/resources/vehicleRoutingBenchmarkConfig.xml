@@ -20,7 +20,7 @@
           <swapMoveSelector/>
           <subListChangeMoveSelector>
             <subListSelector>
-              <minimumSubListSize>0</minimumSubListSize>
+              <minimumSubListSize>1</minimumSubListSize>
               <maximumSubListSize>10</maximumSubListSize>
             </subListSelector>
           </subListChangeMoveSelector>
