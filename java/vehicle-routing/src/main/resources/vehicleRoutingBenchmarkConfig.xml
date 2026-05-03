@@ -13,32 +13,17 @@
       <termination>
         <secondsSpentLimit>60</secondsSpentLimit>
       </termination>
-      <constructionHeuristic/>
-      <localSearch>
-        <unionMoveSelector>
-          <changeMoveSelector/>
-          <swapMoveSelector/>
-          <subListChangeMoveSelector>
-            <subListSelector>
-              <minimumSubListSize>1</minimumSubListSize>
-              <maximumSubListSize>10</maximumSubListSize>
-            </subListSelector>
-          </subListChangeMoveSelector>
-        </unionMoveSelector>
-        <acceptor>
-          <acceptorType>LATE_ACCEPTANCE</acceptorType>
-          <lateAcceptanceSize>200</lateAcceptanceSize>
-        </acceptor>
-        <forager>
-          <acceptedCountLimit>1000</acceptedCountLimit>
-        </forager>
-      </localSearch>
     </solver>
   </inheritedSolverBenchmark>
 
   <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>LA-Union-Move-Selector</name>
+    <name>Baseline Default</name>
+    <solver>
+      <constructionHeuristic/>
+      <localSearch>
+      </localSearch>
+    </solver>
   </solverBenchmark>
 
 </plannerBenchmark>

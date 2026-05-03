@@ -78,197 +78,46 @@ commit  problem  benchmark_time  config_name  final_score  run_time_ms  score_ca
 
 ## 工作流程（6 Phase）
 
-### Phase 0: History Analysis（历史实验复用）
+### Phase 0: History Analysis（历史实验分析）
+读取 `experiences.md` + `results.tsv`，输出实验数据分析：各策略的分数、收敛时间、评估密度、与 baseline 的差距。**不做主观判断**——不标记"好/坏"策略，只呈现数据。
 
-**目标**：避免重复已知无效策略，复用已知有效策略。
-
-1. **读取 `experiences.md`**：
-   - 提取已知无效策略（不再测试）
-   - 提取已知有效策略（可复用或微调）
-   - 提取关键经验教训
-
-2. **读取 results.tsv**（如存在）：
-   - 解析所有历史实验结果
-   - 统计各策略平均表现
-   - 识别收敛最快的策略
-
-3. **输出**：
-   - `excluded_strategies`：已知无效策略列表
-   - `candidate_strategies`：已知有效策略列表
-
-### Phase 1: Knowledge Extraction（知识提取 + 配置模板）
-
-**目标**：从文档中提取可优化维度和配置语法，避免运行时错误。
-
-1. **利用 LLM 知识库或查阅在线 Timefold 文档**，提取：
-   - Local Search 策略（Late Acceptance, Simulated Annealing, Tabu Search, Hill Climbing, Great Deluge）
-   - Move Selector（Change, Swap, SubList, Union, Nearby）
-   - Acceptor（Late Acceptance 历史大小, SA 温度, Tabu 大小, Fading Tabu）
-   - Forager（acceptedCountLimit, pickEarlyType）
-   - Construction Heuristic（First Fit, Best Fit, Cheapest Insertion, FFD）
-   - 自定义组件（Comparator, Filter, MoveFactory）
-
-2. **提取 XML 配置语法和约束规则**：
-   - 元素顺序：`unionMoveSelector` → `acceptor` → `forager`
-   - 互斥规则：`localSearchType` 与 `acceptor` 不能同时配置
-   - 命名规则：benchmark name 只能包含 `[\w\d _\-\.()]`
-   - 类型约束：`minimumSubListSize` ≥ 1, `lateAcceptanceSize` ≥ 3
-   - Schema 限制：`entitySelector` 必须包裹在 move selector 中
-
-3. **输出**：
-   - 优化策略清单（排除 excluded_strategies）
-   - 每个策略的配置模板（已验证语法）
-   - 优先级评分：`score = expected_improvement / implementation_cost`
+### Phase 1: Direction Analysis（方向分析）
+参考完整模板 `src/main/resources/vehicleRoutingBenchmarkConfig_FULL_TEMPLATE.xml`，结合 Phase 0 的数据分析，识别：哪些维度还没探索过、哪些方向有改进空间、哪些组合还没试过。产出 Phase 3 的**实验方向建议**（不是任务列表）。
 
 ### Phase 2: Baseline（建立基线）
-
-1. 运行当前配置的 benchmark
-2. 记录基线分数、收敛曲线、评估次数
-3. 分析基线瓶颈：
-   - 收敛时间 vs 总时间（是否还有优化空间）
-   - 评估次数密度（评估越快，可探索更多 move）
-   - Hard/Medium 约束是否已满足
+运行当前配置 benchmark，记录基线分数、收敛曲线、评估次数。分析瓶颈：收敛时间占比、评估密度、Hard/Medium 约束状态。
 
 ### Phase 3: Parallel Exploration（并行探索）
+**主智能体分配方向 → 5 个子智能体并行实验 → 主智能体选优 commit。** 每轮 = 种群大小 5 的并行搜索，仅最优者保留。
 
-**目标**：使用 git worktree 隔离，子智能体并行测试独立策略。
+1. **分配方向**：主智能体从 Phase 1 的实验方向建议中挑选 5 个方向，确保覆盖不同维度。每个方向包含：基准配置（当前 best-known）、要探索的维度。**子智能体自主决定具体策略组合**，不受历史实验限制。
+2. **创建 worktree**：`git worktree add /tmp/ar-w{1-5} autoresearch_beta`
+3. **子智能体执行**：在 worktree 中改配置 → `mvn compile -q` → 跑 benchmark → 返回 JSON 结果。**不执行 git 写操作。**
+4. **收集结果 + 选优**：按 `soft_score` 排序，参考 `convergence_time_ms` / `move_eval_count`。
+   - 有改善（> 0.1%）：应用最优配置到主分支
+   - 全部失败：记录所有结果到 results.tsv，进入下一轮
+   - 次优保留：接近 baseline 且收敛快的配置作为下一轮起点
+5. **提交代码**：`git add` → `git commit -m "Phase3: <config_name> (<improvement>%)"` → 更新 best-known
+6. **清理 worktree**：`git worktree remove /tmp/ar-w{1-5}`
 
-1. **策略分组**（按独立性）：
-   - **互斥组**（Local Search 策略）：LA, SA, Tabu, Hill Climbing — 串行测试
-   - **可组合组**（Move Selector + Acceptor + Forager）：可与 LA 组合测试
-   - **独立组**（Custom Components）：Comparator, Filter — 可并行测试
+**结果上报格式**（子智能体必须返回 JSON）：
+```json
+{"config_name": "LA size 45", "soft_score": -96000, "final_score": "0hard/0medium/-96000soft", "convergence_time_ms": 4500, "move_eval_count": 8500000, "status": "success", "error_log": ""}
+```
 
-2. **git worktree 隔离**（解决并行 git 冲突）：
-   ```bash
-   git worktree add /tmp/ar-worker-1 autoresearch_belta
-   git worktree add /tmp/ar-worker-2 autoresearch_belta
-   # 每个 worker 独立修改配置、编译、运行
-   git worktree remove /tmp/ar-worker-1
-   ```
-
-3. **配置预验证**（运行时前检查）：
-   - XML 格式检查（元素顺序、必填字段）
-   - 互斥规则检查
-   - 命名规则检查
-   - 数值范围检查
-
-4. **子智能体执行**（每个 worker 独立）：
-   - 修改配置（使用 Phase 1 的配置模板）
-   - `git commit` → `mvn compile -q` → 运行 benchmark → 记录结果 → `git reset`（如果无效）
-
-5. **有效策略判定**：
-   - Soft score 改善 > 0.1%（相对于 baseline）
-   - Hard = 0, Medium = 0（约束必须满足）
-   - 收敛时间 < 总时间 × 0.9（未过早收敛）
+**判定规则**：改善 > 0.1%、Hard=0、Medium=0、收敛时间 < 总时间 × 0.9。**5 个实验全部写入 results.tsv**（status: keep/discard/crash），不浪费任何算力——失败实验的收敛曲线、评估密度、错误模式都是 Phase 0 数据分析的重要素材。
 
 ### Phase 4: Combination（策略组合）
-
-1. 从 Phase 3 筛选有效策略
-2. 生成组合方案（笛卡尔积，排除已知冲突）
-3. 测试组合效应：
-   - 组合分数 > 各策略单独分数之和 → 正协同
-   - 组合分数 < 最差策略 → 负协同（冲突）
-4. 记录最佳组合
+从 Phase 3 有效策略生成组合方案（笛卡尔积，排除冲突），测试协同效应（正/负协同），记录最佳组合。
 
 ### Phase 5: Fine-tuning（微调 + 收敛检测）
-
-1. 对最佳组合进行参数搜索：
-   - Late Acceptance size：[30, 40, 50, 60, 75, 100]
-   - acceptedCountLimit：[500, 1000, 2000]
-   - SubList 大小范围：[1-5, 1-10, 1-20]
-
-2. **收敛检测自动终止**：
-   - 连续 5 次实验分数变化 < 0.05% → 终止微调
-   - 达到最大迭代数（10 次）→ 终止
-   - 达到分数阈值（接近 sintef 最优解）→ 终止
+对最佳配置进行参数微调（LA size、acceptedCountLimit、SubList 范围）。收敛检测：连续 5 次变化 < 0.05% → 终止；最大 15 次迭代；或达到分数阈值。
 
 ### Phase 6: Report（自动分析 + 报告生成）
-
-1. **解析 BEST_SCORE.csv**（每个实验的报告目录）：
-   - 提取初始分数、收敛时间、分数变化曲线
-   - 计算收敛速度（分数/时间）
-
-2. **生成实验报告**（`agent_research_report.md`）：
-   - 基线 vs 最优分数对比
-   - 策略有效性排名
-   - 收敛曲线对比
-   - 策略协同效应分析
-   - 最终配置 + 配置模板
-   - 排除策略及原因
-
-3. **输出产物**：
-   - `results.tsv` — 所有实验结果
-   - `agent_research_report.md` — 智能体研究报告
-   - 最优配置的 `vehicleRoutingBenchmarkConfig.xml`
-   - 所有有效自定义 Java 组件
-
----
-
-## 配置模板
-
-**完整模板文件**：`src/main/resources/vehicleRoutingBenchmarkConfig_FULL_TEMPLATE.xml`
-
-- 包含所有可配置位置，留空或使用默认值
-- 互斥配置已用 `[互斥]` 标注
-- 每个配置项都有注释标注可选值、必填/可选、默认值
-
-**使用方式**：
-1. 复制完整模板到 `vehicleRoutingBenchmarkConfig.xml`
-2. 删除不需要的注释
-3. 填入参数
-4. 对照模板中的 `[互斥]` 标注验证
-
-**常见配置示例**（从模板中提取）：
-
-### Late Acceptance
-```xml
-<acceptor>
-  <acceptorType>LATE_ACCEPTANCE</acceptorType>
-  <lateAcceptanceSize>50</lateAcceptanceSize>
-</acceptor>
-```
-
-### Union Move Selector
-```xml
-<unionMoveSelector>
-  <changeMoveSelector/>
-  <swapMoveSelector/>
-  <subListChangeMoveSelector>
-    <subListSelector>
-      <minimumSubListSize>1</minimumSubListSize>
-      <maximumSubListSize>10</maximumSubListSize>
-    </subListSelector>
-  </subListChangeMoveSelector>
-</unionMoveSelector>
-```
-
-### Forager
-```xml
-<forager>
-  <acceptedCountLimit>1000</acceptedCountLimit>
-</forager>
-```
-
----
-
-## XML 配置约束规则
-
-| 规则 | 说明 | 违反后果 |
-|---|---|---|
-| 元素顺序 | `unionMoveSelector` → `acceptor` → `forager` | XML 验证失败 |
-| localSearchType 互斥 | 不能与 `acceptor` 同时配置 | IllegalArgumentException |
-| benchmark name | 只能包含 `[\w\d _\-\.()]` | IllegalArgumentException |
-| minimumSubListSize | 必须 ≥ 1 | IllegalArgumentException |
-| lateAcceptanceSize | 必须 ≥ 3 | IllegalArgumentException |
-| entitySelector | 必须包裹在 move selector 中 | XML 验证失败 |
-| acceptedCountLimit | forager 的子元素，不是 selectedCountLimit | XML 验证失败 |
-| simulatedAnnealingStartingTemperature | 需要完整分数格式 `0hard/0medium/500soft` | IllegalArgumentException |
+解析 BEST_SCORE.csv 提取收敛曲线，生成 `agent_research_report.md`（基线对比、策略排名、曲线对比、协同分析、最终配置）。输出：results.tsv、报告、最优配置 XML、有效自定义组件。
 
 ---
 
 ## 原则
 
-1. **Think Before Coding**：在修改任何东西之前，先理解代码库和问题。问自己：为什么这个修改会有帮助？期望的结果是什么？
-2. **Simplicity First**：在其他条件相同的情况下，越简单越好。一个添加了丑陋复杂度的微小改进不值得。
-3. **Surgical Changes**：每次只改一个东西，验证结果后再进行下一个。不要同时修改多个东西。
-4. **Goal-Driven Execution**：始终记住目标：Hard=0、Medium=0、Soft 越接近 0 越好。如果一个修改不能让你更接近目标，就回退它。
+遵守 karpathy-guidelines 技能：Think Before Coding、Simplicity First、Surgical Changes、Goal-Driven Execution。
