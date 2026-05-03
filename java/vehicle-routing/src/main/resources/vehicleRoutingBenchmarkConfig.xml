@@ -15,13 +15,6 @@
       </termination>
       <constructionHeuristic/>
       <localSearch>
-        <acceptor>
-          <acceptorType>LATE_ACCEPTANCE</acceptorType>
-          <lateAcceptanceSize>200</lateAcceptanceSize>
-        </acceptor>
-        <forager>
-          <acceptedCountLimit>1000</acceptedCountLimit>
-        </forager>
         <unionMoveSelector>
           <changeMoveSelector/>
           <swapMoveSelector/>
@@ -32,6 +25,13 @@
             </subListSelector>
           </subListChangeMoveSelector>
         </unionMoveSelector>
+        <acceptor>
+          <acceptorType>LATE_ACCEPTANCE</acceptorType>
+          <lateAcceptanceSize>200</lateAcceptanceSize>
+        </acceptor>
+        <forager>
+          <acceptedCountLimit>1000</acceptedCountLimit>
+        </forager>
       </localSearch>
     </solver>
   </inheritedSolverBenchmark>
