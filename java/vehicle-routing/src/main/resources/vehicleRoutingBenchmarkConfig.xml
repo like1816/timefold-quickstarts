@@ -27,11 +27,14 @@
           <changeMoveSelector/>
           <swapMoveSelector/>
           <subListChangeMoveSelector>
-            <subListSizeRatio>0.1</subListSizeRatio>
+            <subListSelector>
+              <minimumSize>0</minimumSize>
+              <maximumSize>10</maximumSize>
+            </subListSelector>
           </subListChangeMoveSelector>
         </unionMoveSelector>
         <forager>
-          <acceptedCountLimit>1000</acceptedCountLimit>
+          <selectedCountLimit>1000</selectedCountLimit>
         </forager>
         <acceptor>
           <lateAcceptanceSize>200</lateAcceptanceSize>
