@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Timefold Solver 2.0 完整 Benchmark 配置模板
+  包含所有可配置位置。留空或使用默认值的位置已标注。
+  互斥配置已用 [互斥] 标注，使用时只能选其一。
+-->
+<plannerBenchmark xmlns="https://timefold.ai/xsd/benchmark">
+  <benchmarkDirectory>local/benchmarkReport</benchmarkDirectory>
+
+  <inheritedSolverBenchmark>
+    <solver>
+      <!-- ========== 基础配置 ========== -->
+      <solutionClass>org.acme.vehiclerouting.domain.VehicleRoutePlan</solutionClass>
+      <entityClass>org.acme.vehiclerouting.domain.Vehicle</entityClass>
+      <entityClass>org.acme.vehiclerouting.domain.Visit</entityClass>
+
+      <scoreDirectorFactory>
+        <constraintProviderClass>org.acme.vehiclerouting.score.VehicleRoutingConstraintProvider</constraintProviderClass>
+        <!-- [可选] 分数计算缓存 (需要企业版)
+        <scoreCalculationCountLimit>0</scoreCalculationCountLimit>
+        -->
+      </scoreDirectorFactory>
+
+      <!-- ========== 终止条件 ========== -->
+      <termination>
+        <!-- [可选] 以下任选其一或组合 -->
+        <secondsSpentLimit>60</secondsSpentLimit>
+        <!-- <scoreCalculationCountLimit>0</scoreCalculationCountLimit> -->
+        <!-- <bestScoreLimit>0hard/0medium/0soft</bestScoreLimit> -->
+        <!-- <unimprovedSecondsSpentLimit>0</unimprovedSecondsSpentLimit> -->
+      </termination>
+
+      <!-- ========== 构造启发式 ========== -->
+      <constructionHeuristic>
+        <!-- [可选] 构造启发式类型 (默认: FIRST_FIT) -->
+        <!-- [可选值] FIRST_FIT, FIRST_FIT_DECREASING, BEST_FIT, CHEAPEST_INSERTION,
+                      ALLOCATE_ENTITY_FROM_QUEUE, ALLOCATE_TO_VALUE_FROM_QUEUE, ALLOCATE_FROM_POOL -->
+        <!-- <constructionHeuristicType>FIRST_FIT</constructionHeuristicType> -->
+
+        <!-- [可选] Entity Sorter -->
+        <!-- <entitySorterManger>
+          <entitySorterComparatorClass>com.example.MyEntityComparator</entitySorterComparatorClass>
+        </entitySorterManger> -->
+
+        <!-- [可选] Value Sorter -->
+        <!-- <valueSorterManger>
+          <valueSorterComparatorClass>com.example.MyValueComparator</valueSorterComparatorClass>
+        </valueSorterManger> -->
+
+        <!-- [可选] 分配策略 -->
+        <!-- <allocateEntityFromQueue>
+          <entitySelector>
+            <entitySorterManger>...</entitySorterManger>
+          </entitySelector>
+        </allocateEntityFromQueue> -->
+
+        <!-- [可选] 构造阶段定制 -->
+        <!-- <constructionHeuristicPhase>
+          <constructionHeuristicType>FIRST_FIT_DECREASING</constructionHeuristicType>
+        </constructionHeuristicPhase> -->
+      </constructionHeuristic>
+
+      <!-- ========== Local Search ========== -->
+      <localSearch>
+        <!-- ============================================= -->
+        <!-- Move Selector (三选一，互斥)                   -->
+        <!-- ============================================= -->
+
+        <!-- [选项 1] 单一 Move Selector -->
+        <!-- <changeMoveSelector/> -->
+        <!-- <swapMoveSelector/> -->
+        <!-- <subListChangeMoveSelector>
+          <subListSelector>
+            <minimumSubListSize>1</minimumSubListSize>
+            <maximumSubListSize>10</maximumSubListSize>
+          </subListSelector>
+        </subListChangeMoveSelector> -->
+        <!-- <subListSwapMoveSelector>
+          <subListSelector>
+            <minimumSubListSize>1</minimumSubListSize>
+            <maximumSubListSize>10</maximumSubListSize>
+          </subListSelector>
+        </subListSwapMoveSelector> -->
+        <!-- <pillarChangeMoveSelector/> -->
+        <!-- <pillarSwapMoveSelector/> -->
+
+        <!-- [选项 2] Union Move Selector (组合多个) -->
+        <!-- <unionMoveSelector>
+          <changeMoveSelector/>
+          <swapMoveSelector/>
+          <subListChangeMoveSelector>
+            <subListSelector>
+              <minimumSubListSize>1</minimumSubListSize>
+              <maximumSubListSize>10</maximumSubListSize>
+            </subListSelector>
+          </subListChangeMoveSelector>
+        </unionMoveSelector> -->
+
+        <!-- [选项 3] 嵌套 Selector -->
+        <!-- <unionMoveSelector>
+          <changeMoveSelector>
+            <entitySelector>
+              <entityTabuSize>0</entityTabuSize>
+            </entitySelector>
+          </changeMoveSelector>
+        </unionMoveSelector> -->
+
+        <!-- ============================================= -->
+        <!-- Acceptor (与 localSearchType 互斥)            -->
+        <!-- ============================================= -->
+
+        <!-- [互斥] 不能用 localSearchType 和 acceptor 同时配置 -->
+        <!-- <localSearchType>LATE_ACCEPTANCE</localSearchType> -->
+
+        <acceptor>
+          <!-- [可选] Acceptor 类型 (默认: HILL_CLIMBING) -->
+          <!-- [可选值] HILL_CLIMBING, LATE_ACCEPTANCE, SIMULATED_ANNEALING,
+                      TABU_SEARCH, FADING_ENTITY_TABU, FADING_MOVE_TABU, GREAT_DELUGE -->
+          <!-- <acceptorType>LATE_ACCEPTANCE</acceptorType> -->
+
+          <!-- [Late Acceptance] 历史大小 (必须 ≥ 3) -->
+          <!-- <lateAcceptanceSize>200</lateAcceptanceSize> -->
+
+          <!-- [Simulated Annealing] 起始温度 (需要完整分数格式) -->
+          <!-- <simulatedAnnealingStartingTemperature>0hard/0medium/500soft</simulatedAnnealingStartingTemperature> -->
+
+          <!-- [Tabu Search] Entity Tabu 大小 -->
+          <!-- <entityTabuSize>3</entityTabuSize> -->
+
+          <!-- [Tabu Search] Move Tabu 大小 -->
+          <!-- <moveTabuSize>10</moveTabuSize> -->
+
+          <!-- [Fading Tabu] Entity Tabu 比例 -->
+          <!-- <fadingEntityTabuRatio>0.1</fadingEntityTabuRatio> -->
+
+          <!-- [Fading Tabu] Move Tabu 比例 -->
+          <!-- <fadingMoveTabuRatio>0.1</fadingMoveTabuRatio> -->
+
+          <!-- [Great Deluge] 水位下降系数 -->
+          <!-- <greatDelugeAcceptanceQualityFactor>0.01</greatDelugeAcceptanceQualityFactor> -->
+        </acceptor>
+
+        <!-- ============================================= -->
+        <!-- Forager                                       -->
+        <!-- ============================================= -->
+        <forager>
+          <!-- [可选] 接受数量限制 -->
+          <!-- <acceptedCountLimit>1000</acceptedCountLimit> -->
+
+          <!-- [可选] 提前选择类型 (默认: NEVER) -->
+          <!-- [可选值] NEVER, FIRST_BEST_SCORE_IMPROVING, FIRST_LAST_STEP_SCORE_IMPROVING -->
+          <!-- <pickEarlyType>NEVER</pickEarlyType> -->
+
+          <!-- [可选] 打破平局随机性 (默认: true) -->
+          <!-- <breakTieRandomly>true</breakTieRandomly> -->
+        </forager>
+      </localSearch>
+
+      <!-- ========== 自定义 Local Search Phase ========== -->
+      <!-- [可选] 添加额外的 Local Search 阶段
+      <localSearchPhase>
+        <localSearchType>LATE_ACCEPTANCE</localSearchType>
+        <acceptor>...</acceptor>
+        <forager>...</forager>
+      </localSearchPhase>
+      -->
+
+    </solver>
+  </inheritedSolverBenchmark>
+
+  <!-- ========== Solver Benchmark 配置 ========== -->
+  <!-- 每个 solverBenchmark 继承 inheritedSolverBenchmark，可覆盖/追加配置 -->
+  <solverBenchmark>
+    <!-- [必填] 配置名称 (只能包含 [\w\d _\-\.()] ) -->
+    <name>Config-Name</name>
+
+    <!-- [可选] 覆盖继承的配置 -->
+    <solver>
+      <!-- 只写需要覆盖的部分 -->
+      <!-- <localSearch>
+        <acceptor>
+          <acceptorType>LATE_ACCEPTANCE</acceptorType>
+          <lateAcceptanceSize>50</lateAcceptanceSize>
+        </acceptor>
+      </localSearch> -->
+    </solver>
+  </solverBenchmark>
+
+  <!-- 可添加多个 solverBenchmark 进行对比测试 -->
+  <!--
+  <solverBenchmark>
+    <name>Config-Name-2</name>
+    <solver>
+      ...
+    </solver>
+  </solverBenchmark>
+  -->
+
+</plannerBenchmark>

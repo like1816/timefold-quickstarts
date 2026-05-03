@@ -204,96 +204,49 @@ commit  problem  benchmark_time  config_name  final_score  run_time_ms  score_ca
 
 ---
 
-## 配置模板库（Timefold 2.0 验证版）
+## 配置模板
+
+**完整模板文件**：`src/main/resources/vehicleRoutingBenchmarkConfig_FULL_TEMPLATE.xml`
+
+- 包含所有可配置位置，留空或使用默认值
+- 互斥配置已用 `[互斥]` 标注
+- 每个配置项都有注释标注可选值、必填/可选、默认值
+
+**使用方式**：
+1. 复制完整模板到 `vehicleRoutingBenchmarkConfig.xml`
+2. 删除不需要的注释
+3. 填入参数
+4. 对照模板中的 `[互斥]` 标注验证
+
+**常见配置示例**（从模板中提取）：
 
 ### Late Acceptance
 ```xml
-<localSearch>
-  <acceptor>
-    <acceptorType>LATE_ACCEPTANCE</acceptorType>
-    <lateAcceptanceSize>50</lateAcceptanceSize>
-  </acceptor>
-</localSearch>
-```
-
-### Simulated Annealing
-```xml
-<localSearch>
-  <acceptor>
-    <acceptorType>SIMULATED_ANNEALING</acceptorType>
-    <simulatedAnnealingStartingTemperature>0hard/0medium/500soft</simulatedAnnealingStartingTemperature>
-  </acceptor>
-</localSearch>
-```
-
-### Tabu Search
-```xml
-<localSearch>
-  <acceptor>
-    <acceptorType>TABU_SEARCH</acceptorType>
-    <entityTabuSize>3</entityTabuSize>
-  </acceptor>
-</localSearch>
+<acceptor>
+  <acceptorType>LATE_ACCEPTANCE</acceptorType>
+  <lateAcceptanceSize>50</lateAcceptanceSize>
+</acceptor>
 ```
 
 ### Union Move Selector
 ```xml
-<localSearch>
-  <unionMoveSelector>
-    <changeMoveSelector/>
-    <swapMoveSelector/>
-    <subListChangeMoveSelector>
-      <subListSelector>
-        <minimumSubListSize>1</minimumSubListSize>
-        <maximumSubListSize>10</maximumSubListSize>
-      </subListSelector>
-    </subListChangeMoveSelector>
-  </unionMoveSelector>
-</localSearch>
+<unionMoveSelector>
+  <changeMoveSelector/>
+  <swapMoveSelector/>
+  <subListChangeMoveSelector>
+    <subListSelector>
+      <minimumSubListSize>1</minimumSubListSize>
+      <maximumSubListSize>10</maximumSubListSize>
+    </subListSelector>
+  </subListChangeMoveSelector>
+</unionMoveSelector>
 ```
 
 ### Forager
 ```xml
-<localSearch>
-  <forager>
-    <acceptedCountLimit>1000</acceptedCountLimit>
-  </forager>
-</localSearch>
-```
-
-### Construction Heuristic
-```xml
-<constructionHeuristic>
-  <constructionHeuristicType>FIRST_FIT_DECREASING</constructionHeuristicType>
-</constructionHeuristic>
-```
-
-### 完整配置模板
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<plannerBenchmark xmlns="https://timefold.ai/xsd/benchmark">
-  <benchmarkDirectory>local/benchmarkReport</benchmarkDirectory>
-  <inheritedSolverBenchmark>
-    <solver>
-      <solutionClass>org.acme.vehiclerouting.domain.VehicleRoutePlan</solutionClass>
-      <entityClass>org.acme.vehiclerouting.domain.Vehicle</entityClass>
-      <entityClass>org.acme.vehiclerouting.domain.Visit</entityClass>
-      <scoreDirectorFactory>
-        <constraintProviderClass>org.acme.vehiclerouting.score.VehicleRoutingConstraintProvider</constraintProviderClass>
-      </scoreDirectorFactory>
-      <termination>
-        <secondsSpentLimit>60</secondsSpentLimit>
-      </termination>
-      <constructionHeuristic/>
-      <localSearch>
-        <!-- Move Selector, Acceptor, Forager 按此顺序 -->
-      </localSearch>
-    </solver>
-  </inheritedSolverBenchmark>
-  <solverBenchmark>
-    <name>Config-Name-Here</name>
-  </solverBenchmark>
-</plannerBenchmark>
+<forager>
+  <acceptedCountLimit>1000</acceptedCountLimit>
+</forager>
 ```
 
 ---
