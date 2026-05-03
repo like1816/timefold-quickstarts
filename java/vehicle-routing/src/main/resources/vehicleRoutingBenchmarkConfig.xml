@@ -27,7 +27,7 @@
 
   <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>LA + Union Move Selector</name>
+    <name>LA-Union-Move-Selector</name>
     <solver>
       <constructionHeuristic/>
       <localSearch>
