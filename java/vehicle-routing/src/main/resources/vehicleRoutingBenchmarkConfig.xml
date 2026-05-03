@@ -22,7 +22,6 @@
     <solver>
       <constructionHeuristic/>
       <localSearch>
-        <localSearchType>LATE_ACCEPTANCE</localSearchType>
         <unionMoveSelector>
           <changeMoveSelector/>
           <swapMoveSelector/>
