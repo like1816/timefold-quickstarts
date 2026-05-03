@@ -22,15 +22,6 @@
         <forager>
           <acceptedCountLimit>1000</acceptedCountLimit>
         </forager>
-      </localSearch>
-    </solver>
-  </inheritedSolverBenchmark>
-
-  <!-- 只有一个配置：每次迭代修改这个 -->
-  <solverBenchmark>
-    <name>LA-Union-Move-Selector</name>
-    <solver>
-      <localSearch>
         <unionMoveSelector>
           <changeMoveSelector/>
           <swapMoveSelector/>
@@ -43,6 +34,11 @@
         </unionMoveSelector>
       </localSearch>
     </solver>
+  </inheritedSolverBenchmark>
+
+  <!-- 只有一个配置：每次迭代修改这个 -->
+  <solverBenchmark>
+    <name>LA-Union-Move-Selector</name>
   </solverBenchmark>
 
 </plannerBenchmark>
