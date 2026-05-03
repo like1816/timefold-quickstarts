@@ -27,8 +27,10 @@
           <changeMoveSelector/>
           <swapMoveSelector/>
           <subListChangeMoveSelector>
-            <minimumSubListSize>0</minimumSubListSize>
-            <maximumSubListSize>10</maximumSubListSize>
+            <subListSelector>
+              <minimumSubListSize>0</minimumSubListSize>
+              <maximumSubListSize>10</maximumSubListSize>
+            </subListSelector>
           </subListChangeMoveSelector>
         </unionMoveSelector>
         <forager>
