@@ -14,8 +14,8 @@
         <secondsSpentLimit>60</secondsSpentLimit>
       </termination>
       <localSearch>
-        <localSearchType>LATE_ACCEPTANCE</localSearchType>
         <acceptor>
+          <acceptorType>LATE_ACCEPTANCE</acceptorType>
           <lateAcceptanceSize>200</lateAcceptanceSize>
         </acceptor>
         <forager>
