@@ -18,10 +18,24 @@
 
   <!-- 只有一个配置：每次迭代修改这个 -->
   <solverBenchmark>
-    <name>Baseline Default</name>
+    <name>LA + Union Move Selector</name>
     <solver>
       <constructionHeuristic/>
       <localSearch>
+        <localSearchType>LATE_ACCEPTANCE</localSearchType>
+        <unionMoveSelector>
+          <changeMoveSelector/>
+          <swapMoveSelector/>
+          <subListChangeMoveSelector>
+            <subListSizeRatio>0.1</subListSizeRatio>
+          </subListChangeMoveSelector>
+        </unionMoveSelector>
+        <forager>
+          <acceptedCountLimit>1000</acceptedCountLimit>
+        </forager>
+        <acceptor>
+          <lateAcceptanceSize>200</lateAcceptanceSize>
+        </acceptor>
       </localSearch>
     </solver>
   </solverBenchmark>
