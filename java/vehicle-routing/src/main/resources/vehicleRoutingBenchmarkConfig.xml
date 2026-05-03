@@ -13,6 +13,7 @@
       <termination>
         <secondsSpentLimit>60</secondsSpentLimit>
       </termination>
+      <constructionHeuristic/>
       <localSearch>
         <acceptor>
           <acceptorType>LATE_ACCEPTANCE</acceptorType>
@@ -29,7 +30,6 @@
   <solverBenchmark>
     <name>LA-Union-Move-Selector</name>
     <solver>
-      <constructionHeuristic/>
       <localSearch>
         <unionMoveSelector>
           <changeMoveSelector/>
