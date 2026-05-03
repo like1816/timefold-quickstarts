@@ -28,12 +28,13 @@
    - `SKILL.md` — 本文档
    - `pom.xml` — Maven 依赖配置
    - `results.tsv` — 历史实验结果
+   - `experiences.md` — 经验记录（无效/有效策略、关键经验）
    - `src/main/java/org/acme/vehiclerouting/benchmark/VehicleRoutingBenchmarkRunner.java` — Benchmark 运行器
    - `src/main/resources/vehicleRoutingBenchmarkConfig.xml` — 求解器配置
    - `src/main/java/org/acme/vehiclerouting/score/VehicleRoutingConstraintProvider.java` — 约束定义
    - `src/main/java/org/acme/vehiclerouting/solver/` — 自定义组件
    - `src/main/java/org/acme/vehiclerouting/domain/` — 领域模型
-4. **利用知识库**：查阅 Timefold 文档（Local Search、Move Selection、Score、Construction Heuristics）
+4. **利用知识库**：一定查阅本地知识库或在线Timefold文档，尤其注意接口和xml文件编写格式。
 5. **验证数据存在**：`src/main/resources/input/problems/` 包含 Solomon 问题实例
 6. **确认 results.tsv**：此文件 git-ignored，本地持久化。不要重新创建，直接追加。
 7. **确认开始**
@@ -81,11 +82,10 @@ commit  problem  benchmark_time  config_name  final_score  run_time_ms  score_ca
 
 **目标**：避免重复已知无效策略，复用已知有效策略。
 
-1. **读取历史实验文档**（如 `autoresearch-summary.md`）：
-   - 提取所有已测试策略及其分数
-   - 标记已知无效策略
-   - 标记已知有效策略
-   - 提取策略-分数映射表
+1. **读取 `experiences.md`**：
+   - 提取已知无效策略（不再测试）
+   - 提取已知有效策略（可复用或微调）
+   - 提取关键经验教训
 
 2. **读取 results.tsv**（如存在）：
    - 解析所有历史实验结果
@@ -93,14 +93,14 @@ commit  problem  benchmark_time  config_name  final_score  run_time_ms  score_ca
    - 识别收敛最快的策略
 
 3. **输出**：
-   - `excluded_strategies`：已知无效策略（不再测试）
-   - `candidate_strategies`：已知有效策略（可复用或微调）
+   - `excluded_strategies`：已知无效策略列表
+   - `candidate_strategies`：已知有效策略列表
 
 ### Phase 1: Knowledge Extraction（知识提取 + 配置模板）
 
 **目标**：从文档中提取可优化维度和配置语法，避免运行时错误。
 
-1. **读取 `docs/` 目录下所有 Timefold 文档**，提取：
+1. **利用 LLM 知识库或查阅在线 Timefold 文档**，提取：
    - Local Search 策略（Late Acceptance, Simulated Annealing, Tabu Search, Hill Climbing, Great Deluge）
    - Move Selector（Change, Swap, SubList, Union, Nearby）
    - Acceptor（Late Acceptance 历史大小, SA 温度, Tabu 大小, Fading Tabu）
@@ -312,35 +312,6 @@ commit  problem  benchmark_time  config_name  final_score  run_time_ms  score_ca
 | simulatedAnnealingStartingTemperature | 需要完整分数格式 `0hard/0medium/500soft` | IllegalArgumentException |
 
 ---
-
-## 已知无效策略（从历史实验）
-
-| 策略 | 分数 | 原因 |
-|---|---|---|
-| Tabu Search（所有变体） | -139620soft | 极差，比 baseline 差 45.4% |
-| Simulated Annealing | 未测试 | 需要起始温度，且历史实验未成功 |
-| Great Deluge | -102780soft | 比 baseline 差 7.0% |
-| Nearby Selection | 不可用 | 需要企业版许可证 |
-| WEAKEST_FIT / STRONGEST_FIT | crash | 需要 domain model 修改 |
-
-## 已知有效策略（从历史实验）
-
-| 策略 | 分数 | 说明 |
-|---|---|---|
-| Default Local Search | -96060soft | 最优，所有尝试均未超越 |
-| LA size=50 | -96120soft | 最接近 baseline（差距 0.06%） |
-| LA size=75 | -96180soft | 次优（差距 0.1%） |
-| FFD + Union + LA 50 | -96060soft | 与 baseline 相同 |
-| First Fit / Allocate From Queue / Allocate From Pool | -96060soft | 与 baseline 相同 |
-
----
-
-## 关键经验
-
-1. **每次修改配置后必须先 `mvn compile -q`**：benchmark runner 读取 `target/classes/`，不编译会使用缓存旧配置。
-2. **配置读取顺序**：`inheritedSolverBenchmark` 中的配置会被 `solverBenchmark` 中的配置覆盖/追加。相同类型的 phase 不能重复定义。
-3. **60 秒已收敛**：r101 在 60 秒和 300 秒结果完全相同，说明 r101 在 60 秒内已收敛到最优。
-4. **子智能体隔离**：使用 `git worktree` 为每个子智能体创建独立工作目录，避免 git 冲突。
 
 ## 原则
 
