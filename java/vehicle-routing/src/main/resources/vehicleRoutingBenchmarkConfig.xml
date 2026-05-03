@@ -13,6 +13,15 @@
       <termination>
         <secondsSpentLimit>60</secondsSpentLimit>
       </termination>
+      <localSearch>
+        <localSearchType>LATE_ACCEPTANCE</localSearchType>
+        <acceptor>
+          <lateAcceptanceSize>200</lateAcceptanceSize>
+        </acceptor>
+        <forager>
+          <acceptedCountLimit>1000</acceptedCountLimit>
+        </forager>
+      </localSearch>
     </solver>
   </inheritedSolverBenchmark>
 
@@ -32,12 +41,6 @@
             </subListSelector>
           </subListChangeMoveSelector>
         </unionMoveSelector>
-        <forager>
-          <acceptedCountLimit>1000</acceptedCountLimit>
-        </forager>
-        <acceptor>
-          <lateAcceptanceSize>200</lateAcceptanceSize>
-        </acceptor>
       </localSearch>
     </solver>
   </solverBenchmark>
