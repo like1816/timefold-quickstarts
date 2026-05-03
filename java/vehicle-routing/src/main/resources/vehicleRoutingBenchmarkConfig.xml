@@ -34,7 +34,7 @@
           </subListChangeMoveSelector>
         </unionMoveSelector>
         <forager>
-          <selectedCountLimit>1000</selectedCountLimit>
+          <acceptedCountLimit>1000</acceptedCountLimit>
         </forager>
         <acceptor>
           <lateAcceptanceSize>200</lateAcceptanceSize>
