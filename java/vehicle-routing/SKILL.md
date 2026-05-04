@@ -21,7 +21,7 @@
    - `src/main/java/org/acme/vehiclerouting/score/VehicleRoutingConstraintProvider.java` — 约束定义
    - `src/main/java/org/acme/vehiclerouting/solver/` — 自定义组件
    - `src/main/java/org/acme/vehiclerouting/domain/` — 领域模型
-4. **利用知识库**：一定查阅本地知识库或在线Timefold文档，尤其注意接口和xml文件编写格式。
+4. **利用知识库**：一定查阅关于Timefold的本地的LLM Wiki知识库或线上官方文档，尤其注意接口和xml文件编写格式。
 5. **验证数据存在**：`src/main/resources/input/problems/` 包含 Solomon 问题实例
 6. **确认 results.tsv**：此文件 git-ignored，本地持久化。不要重新创建，直接追加。
 7. **基线确认**：运行当前配置 benchmark，记录基线分数、收敛曲线、评估次数。
