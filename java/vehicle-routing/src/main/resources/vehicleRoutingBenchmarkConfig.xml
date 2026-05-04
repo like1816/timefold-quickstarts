@@ -16,12 +16,27 @@
     </solver>
   </inheritedSolverBenchmark>
 
-  <!-- 只有一个配置：每次迭代修改这个 -->
+  <!-- 源码默认策略（hasListVariable 分支） -->
   <solverBenchmark>
-    <name>Baseline Default</name>
+    <name>Source-Default-LA400</name>
     <solver>
       <constructionHeuristic/>
       <localSearch>
+        <!-- hasListVariable() 分支：Union(ListChange + ListSwap + KOpt) -->
+        <unionMoveSelector>
+          <listChangeMoveSelector/>
+          <listSwapMoveSelector/>
+          <kOptListMoveSelector/>
+        </unionMoveSelector>
+
+        <acceptor>
+          <acceptorType>LATE_ACCEPTANCE</acceptorType>
+          <lateAcceptanceSize>400</lateAcceptanceSize>
+        </acceptor>
+
+        <forager>
+          <acceptedCountLimit>1</acceptedCountLimit>
+        </forager>
       </localSearch>
     </solver>
   </solverBenchmark>
