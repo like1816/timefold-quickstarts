@@ -10,8 +10,6 @@
 | 执行方式 | 串行（一次一个） | git worktree 并行 + 子智能体隔离 |
 | 结果分析 | 只看最终分数 | 收敛曲线 + 评估密度 + 分数分布 |
 | 策略组合 | 无 | 自动组合 + 冲突检测 |
-| 终止条件 | 固定 50 次迭代 | 收敛检测 + 分数阈值 + 最大迭代 |
-| 配置验证 | 无（运行时才发现错误） | XML schema 预验证 |
 
 ---
 
@@ -115,6 +113,12 @@ commit  problem  benchmark_time  config_name  final_score  run_time_ms  score_ca
 
 ### Phase 6: Report（自动分析 + 报告生成）
 解析 BEST_SCORE.csv 提取收敛曲线，生成 `agent_research_report.md`（基线对比、策略排名、曲线对比、协同分析、最终配置）。输出：results.tsv、报告、最优配置 XML、有效自定义组件。
+
+---
+
+## 全局结束条件
+
+总实验次数达到 100 条 results.tsv 记录（每轮 5 个子智能体 = 5 条记录，共 20 轮上限）。
 
 ---
 
