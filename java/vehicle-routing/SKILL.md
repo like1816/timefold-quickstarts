@@ -2,25 +2,14 @@
 
 这是一个基于 Timefold AI 的车辆路径问题（VRPTW）Auto Research 实验。智能体版 — 超越 LLM 串行迭代，实现知识驱动、并行探索、自动分析的自动化求解器优化系统。
 
-## 核心差异
-
-| 维度 | 原版 | 智能体版 |
-|---|---|---|
-| 策略选择 | LLM 凭直觉 | 历史实验 + 文档知识 + 优先级评分 |
-| 执行方式 | 串行（一次一个） | git worktree 并行 + 子智能体隔离 |
-| 结果分析 | 只看最终分数 | 收敛曲线 + 评估密度 + 分数分布 |
-| 策略组合 | 无 | 自动组合 + 冲突检测 |
-
----
-
 ## 基础规则
 
 ### Setup
-
+⚠️ **这个过程非常重要，必须要和用户确认执行结果。**
 设置新实验时：
 
-1. **约定运行标签**：基于日期建议标签（如 `may3`）。分支 `autoresearch/<tag>` 必须不存在。
-2. **创建分支**：`git checkout -b autoresearch/<tag> autoresearch_alpha`
+1. **约定运行标签**：基于日期建议标签（如 `may4`）。分支 `autoresearch/<tag>` 必须不存在。
+2. **创建分支**：`git checkout -b autoresearch/<tag> autoresearch_beta`
 3. **读取关键文件**：
    - `README.md` — 项目概述
    - `SKILL.md` — 本文档
@@ -35,9 +24,10 @@
 4. **利用知识库**：一定查阅本地知识库或在线Timefold文档，尤其注意接口和xml文件编写格式。
 5. **验证数据存在**：`src/main/resources/input/problems/` 包含 Solomon 问题实例
 6. **确认 results.tsv**：此文件 git-ignored，本地持久化。不要重新创建，直接追加。
-7. **确认开始**
+7. **基线确认**：运行当前配置 benchmark，记录基线分数、收敛曲线、评估次数。
+8. **确认开始**：以上步骤完成后，等待用户确认再进入自动流程。
 
-### 可以做什么 / 不能做什么
+### 可以做什么 / 不能做什么 (非常重要，主、子智能体**必须**遵守)
 
 **可以**：
 - 修改 `src/main/resources/vehicleRoutingBenchmarkConfig.xml` — 调整 Local Search 策略、Move Selector 等
@@ -69,61 +59,71 @@ mvn exec:java -Dexec.mainClass="org.acme.vehiclerouting.benchmark.VehicleRouting
 
 TSV 表头：
 ```
-commit  problem  benchmark_time  config_name  final_score  run_time_ms  score_calc_count  move_eval_count  initial_score  convergence_time_ms  status  report_dir
+commit	problem	benchmark_time	config_name	final_score	run_time_ms	score_calc_count	move_eval_count	initial_score	convergence_time_ms	status	description
 ```
+
+> ⚠️ `description` 列：简短描述策略内容（如 "LA size=50 + Forager pickEarly=FIRST_BEST"）
 
 ---
 
-## 工作流程（6 Phase）
+## 自动循环流程
 
-### Phase 0: History Analysis（历史实验分析）
-读取 `experiences.md` + `results.tsv`，输出实验数据分析：各策略的分数、收敛时间、评估密度、与 baseline 的差距。**不做主观判断**——不标记"好/坏"策略，只呈现数据。
+Setup 完成后，自动执行以下循环：
 
-### Phase 1: Direction Analysis（方向分析）
-参考完整模板 `src/main/resources/vehicleRoutingBenchmarkConfig_FULL_TEMPLATE.xml`，结合 Phase 0 的数据分析，识别：哪些维度还没探索过、哪些方向有改进空间、哪些组合还没试过。产出 Phase 3 的**实验方向建议**（不是任务列表）。
+### 每轮流程（共 20 轮，每轮 5 个子智能体）
 
-### Phase 2: Baseline（建立基线）
-运行当前配置 benchmark，记录基线分数、收敛曲线、评估次数。分析瓶颈：收敛时间占比、评估密度、Hard/Medium 约束状态。
+**主智能体职责**：
 
-### Phase 3: Parallel Exploration（并行探索）
-**主智能体分配方向 → 5 个子智能体并行实验 → 主智能体选优 commit。** 每轮 = 种群大小 5 的并行搜索，仅最优者保留。
-
-1. **分配方向**：主智能体从 Phase 1 的实验方向建议中挑选 5 个方向，确保覆盖不同维度。每个方向包含：基准配置（当前 best-known）、要探索的维度。**子智能体自主决定具体策略组合**，不受历史实验限制。
-2. **创建 worktree**：`git worktree add /tmp/ar-w{1-5} autoresearch_beta`
-3. **子智能体执行**：在 worktree 中改配置 → `mvn compile -q` → 跑 benchmark → 返回 JSON 结果。**不执行 git 写操作。**
-4. **收集结果 + 选优**：按 `soft_score` 排序，参考 `convergence_time_ms` / `move_eval_count`。
-   - 有改善（> 0.1%）：应用最优配置到主分支
-   - 全部失败：记录所有结果到 results.tsv，进入下一轮
-   - 次优保留：接近 baseline 且收敛快的配置作为下一轮起点
-5. **提交代码**：`git add` → `git commit -m "Phase3: <config_name> (<improvement>%)"` → 更新 best-known
+1. **分析历史**：读取 `results.tsv` + `experiences.md`，分析上一轮结果
+2. **分配方案**：给出 5 个优化方案，可以从五个方向，可以是类似策略的组合，也可以是同一种策略的不同参数
+3. **收集结果**：收集 5 个子智能体的返回结果
+4. **选优 + 提交/回退**：
+   - 选出最优配置（改善 > 0.1%，Hard=0, Medium=0, 收敛时间 < 总时间 × 0.9）
+   - **改善**：`git add` → `git commit -m "Round N: <config_name> (<improvement>%)"` → 作为下一轮起点
+   - **全部失败**：回退代码 → 继续下一轮
+5. **总结经验**：写入 `experiences.md`
 6. **清理 worktree**：`git worktree remove /tmp/ar-w{1-5}`
 
-**结果上报格式**（子智能体必须返回 JSON）：
+**子智能体职责**：
+
+1. 在 worktree 中执行代码优化
+2. `mvn compile -q` → 跑 benchmark → 返回 JSON 结果
+3. **不执行 git 写操作**
+
+**子智能体返回格式**（JSON）：
 ```json
-{"config_name": "LA size 45", "soft_score": -96000, "final_score": "0hard/0medium/-96000soft", "convergence_time_ms": 4500, "move_eval_count": 8500000, "status": "success", "error_log": ""}
+{"config_name": "LA size 45", "soft_score": -96000, "final_score": "0hard/0medium/-96000soft", "convergence_time_ms": 4500, "move_eval_count": 8500000, "status": "success", "error_log": "", "description": "LA size=45, 比基线 LA400 更激进"}
 ```
 
-**判定规则**：改善 > 0.1%、Hard=0、Medium=0、收敛时间 < 总时间 × 0.9。**5 个实验全部写入 results.tsv**（status: keep/discard/crash），不浪费任何算力——失败实验的收敛曲线、评估密度、错误模式都是 Phase 0 数据分析的重要素材。
-
-### Phase 4: Combination（策略组合）
-从 Phase 3 有效策略生成组合方案（笛卡尔积，排除冲突），测试协同效应（正/负协同），记录最佳组合。
-
-### Phase 5: Fine-tuning（微调 + 收敛检测）
-对最佳配置进行参数微调（LA size、acceptedCountLimit、SubList 范围）。收敛检测：连续 5 次变化 < 0.05% → 终止；最大 15 次迭代；或达到分数阈值。
-
-### Phase 6: Report（自动分析 + 报告生成）
-解析 BEST_SCORE.csv 提取收敛曲线，生成 `agent_research_report.md`（基线对比、策略排名、曲线对比、协同分析、最终配置）。输出：results.tsv、报告、最优配置 XML、有效自定义组件。
+**异常处理**：
+- 子智能体崩溃：主智能体决定是否调试或记录 crash
+- 子智能体超时/异常：主智能体可随时终止（打断）
+- 所有 5 个实验全部写入 results.tsv（status: keep/discard/crash）
 
 ---
 
 ## 全局结束条件
 
-**单次 autoresearch 运行 100 次实验**（每轮 5 个子智能体 = 5 条记录，共 20 轮上限）。
+**20 轮循环完成**（每轮 5 个子智能体，共 100 次实验）。
 
 ⚠️ **重要**：
-- `results.tsv` 是**追加模式**，不清空，不计算"剩余容量"
-- 每次 autoresearch 独立运行 100 次，与历史实验记录数无关
-- 结束条件：本次运行已执行 100 次实验
+- `results.tsv` 是**追加模式**，不清空
+- 每轮结束后只保留最优配置（改善 > 0.1%），失败配置回退
+- 结束条件：20 轮循环完成，或连续 5 轮无改善提前终止
+
+---
+
+## 报告生成
+
+20 轮完成后，主智能体生成 `agent_research_report.md`：
+- 基线对比
+- 策略排名（按分数改善排序）
+- 收敛曲线对比
+- 策略协同效应分析
+- 最终配置 + 配置模板
+- 排除策略及原因
+
+报告打印给用户。
 
 ---
 
