@@ -118,7 +118,12 @@ commit  problem  benchmark_time  config_name  final_score  run_time_ms  score_ca
 
 ## 全局结束条件
 
-总实验次数达到 100 条 results.tsv 记录（每轮 5 个子智能体 = 5 条记录，共 20 轮上限）。
+**单次 autoresearch 运行 100 次实验**（每轮 5 个子智能体 = 5 条记录，共 20 轮上限）。
+
+⚠️ **重要**：
+- `results.tsv` 是**追加模式**，不清空，不计算"剩余容量"
+- 每次 autoresearch 独立运行 100 次，与历史实验记录数无关
+- 结束条件：本次运行已执行 100 次实验
 
 ---
 
